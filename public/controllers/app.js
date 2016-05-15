@@ -81,7 +81,17 @@ jQuery(function($){
             App.currentRound = data.round;
 
             // Change the word for the Host and Player
-            App[App.myRole].newWord(data);
+            if(data.round>=5){
+                if(data.round>=10){
+                    App[App.myRole].newWord(data);
+                }
+                else{
+                    App[App.myRole].newColor(data);
+                }
+            }
+            else {
+                App[App.myRole].newWord(data);
+            }
         },
 
         /**
@@ -210,6 +220,8 @@ jQuery(function($){
              */
             players : [],
 
+            myName: '',
+
             /**
              * Flag to indicate if a new game is starting.
              * This is used after the first game ends, and players initiate a new game
@@ -243,6 +255,7 @@ jQuery(function($){
                 App.gameId = data.gameId;
                 App.mySocketId = data.mySocketId;
                 App.myRole = 'Host';
+                App.Host.myName = $('#username').html() || 'anon';
                 App.Host.numPlayersInRoom = 0;
 
                 App.Host.displayNewGameScreen();
@@ -271,6 +284,12 @@ jQuery(function($){
                 $('#spanNewGameCode').text(App.gameId);
             },
 
+            displayMoreGameScreen : function(){
+                App.$gameArea.html(App.$templateNewGame);
+                $('#gameArea').html("<div class='info-new'>Tvoj oponent ťa vyzval na ďalšiu hru,ak chceš pokračovať,klikni na tlačidlo</div>");
+
+            },
+
             /**
              * Update the Host screen when the first player joins
              * @param data{{playerName: string}}
@@ -278,7 +297,7 @@ jQuery(function($){
             updateWaitingScreen: function(data) {
                 // If this is a restarted game, show the screen.
                 if ( App.Host.isNewGame ) {
-                    App.Host.displayNewGameScreen();
+                    App.Host.displayMoreGameScreen();
                 }
                 // Update host screen
                 $('#playersWaiting')
@@ -365,6 +384,40 @@ jQuery(function($){
                 App.Host.currentRound = data.round;
             },
 
+            newColor : function(data) {
+                // Insert the new word into the DOM
+                var colors = ["blue","red","green","yellow","orange","gray","purple","pink","brown"];
+                var n =  Math.floor(Math.random() * 9);
+                $('#hostWord').text(data.word);
+                document.getElementById('hostWord').setAttribute("style", "color:"+colors[n]+" ;");
+                //$('#hostWord')
+                App.doTextFit('#hostWord');
+
+
+                var $list = $('<ul/>').attr('id','ulAnswers');
+
+                // Insert a list item for each word in the word list
+                // received from the server.
+                $.each(data.list, function(){
+                    $list                                //  <ul> </ul>
+                        .append( $('<li/>')              //  <ul> <li> </li> </ul>
+                            .append( $('<button/>')      //  <ul> <li> <button> </button> </li> </ul>
+                                .addClass('btnAnswer')   //  <ul> <li> <button class='btnAnswer'> </button> </li> </ul>
+                                .addClass('btn')         //  <ul> <li> <button class='btnAnswer'> </button> </li> </ul>
+                                .addClass(this)
+                                .val(this)               //  <ul> <li> <button class='btnAnswer' value='word'> </button> </li> </ul>
+                            )
+                        )
+                });
+
+                $('#resultsArea').html($list);
+
+
+                // Update the data for the current round
+                App.Host.currentCorrectAnswer = data.answer;
+                App.Host.currentRound = data.round;
+            },
+
             /**
              * Check the answer clicked by a player.
              * @param data{{round: *, playerId: *, answer: *, gameId: *}}
@@ -382,7 +435,7 @@ jQuery(function($){
                     // Advance player's score if it is correct
                     if( App.Host.currentCorrectAnswer == data.answer ) {
                         // Add 5 to the player's score
-                        $pScore.text( +$pScore.text() + 5 );
+                        $pScore.text( +$pScore.text() + 1 );
 
                         // Advance the round
                         App.currentRound += 1;
@@ -398,7 +451,7 @@ jQuery(function($){
 
                     } else {
                         // A wrong answer was submitted, so decrement the player's score.
-                        $pScore.text( +$pScore.text() - 3 );
+                        $pScore.text( +$pScore.text() - 1 );
                     }
                 }
             },
@@ -421,15 +474,17 @@ jQuery(function($){
 
                 // Find the winner based on the scores
                 var winner = (p1Score < p2Score) ? p2Name : p1Name;
+                var winscore = (p1Score < p2Score) ? p2Score : p1Score;
                 var tie = (p1Score === p2Score);
 
-                // Display the winner (or tie game message)
+                $('#gameArea')
+                    .html('<div class="gameOver">Koniec hry!</div>')
+
                 if(tie){
-                    $('#hostWord').text("It's a Tie!");
+                    $('#gameArea').append("<div class='gameResult'>Je to remíza!</div>");
                 } else {
-                    $('#hostWord').text( winner + ' Wins!!' );
+                    $('#gameArea').append("<div class='gameResult'>Výherca: "+winner +" so skóre: "+winscore+" </div>" );
                 }
-                App.doTextFit('#hostWord');
 
                 // Reset game data
                 App.Host.numPlayersInRoom = 1;
@@ -486,7 +541,7 @@ jQuery(function($){
                     console.log(data.answer)
                     if( App.Host.currentCorrectAnswer == data.answer ) {
                         // Add 5 to the player's score
-                        $pScore.text( +$pScore.text() + 5 );
+                        $pScore.text( +$pScore.text() + 1 );
 
                         // Advance the round
                        // App.currentRound += 1;
@@ -502,7 +557,7 @@ jQuery(function($){
 
                     } else {
                         // A wrong answer was submitted, so decrement the player's score.
-                        $pScore.text( +$pScore.text() - 3 );
+                        $pScore.text( +$pScore.text() - 1 );
                     }
                 }
             },
@@ -642,19 +697,72 @@ jQuery(function($){
                 App.Host.currentRound = data.round;
             },
 
+            newColor : function(data) {
+                // Create an unordered list element
+                var colors = ["blue","red","green","yellow","orange","gray","purple","pink","brown"];
+                var n =  Math.floor(Math.random() * 9);
+                $('#hostWord').text(data.word);
+                document.getElementById('hostWord').setAttribute("style", "color:"+colors[n]+" ;");
+                App.doTextFit('#hostWord');
+
+
+                var $list = $('<ul/>').attr('id','ulAnswers');
+
+                // Insert a list item for each word in the word list
+                // received from the server.
+                $.each(data.list, function(){
+                    $list                                //  <ul> </ul>
+                        .append( $('<li/>')              //  <ul> <li> </li> </ul>
+                            .append( $('<button/>')      //  <ul> <li> <button> </button> </li> </ul>
+                                .addClass('btnAnswer')   //  <ul> <li> <button class='btnAnswer'> </button> </li> </ul>
+                                .addClass('btn')         //  <ul> <li> <button class='btnAnswer'> </button> </li> </ul>
+                                .addClass(this)
+                                .val(this)               //  <ul> <li> <button class='btnAnswer' value='word'> </button> </li> </ul>
+                            )
+                        )
+                });
+
+                // Insert the list onto the screen.
+                $('#resultsArea').html($list);
+                App.Host.currentCorrectAnswer = data.answer;
+                App.Host.currentRound = data.round;
+            },
+
             /**
              * Show the "Game Over" screen.
              */
             endGame : function() {
+                var $p1 = $('#player1Score');
+                var p1Score = +$p1.find('.score').text();
+                var p1Name = $p1.find('.playerName').text();
+
+                // Get the data for player 2 from the host screen
+                var $p2 = $('#player2Score');
+                var p2Score = +$p2.find('.score').text();
+                var p2Name = $p2.find('.playerName').text();
+
+                // Find the winner based on the scores
+                var winner = (p1Score < p2Score) ? p2Name : p1Name;
+                var winscore = (p1Score < p2Score) ? p2Score : p1Score;
+                var tie = (p1Score === p2Score);
+
+                // Display the winner (or tie game message)
+
                 $('#gameArea')
-                    .html('<div class="gameOver">Game Over!</div>')
+                    .html('<div class="gameOver">Koniec hry!</div>')
                     .append(
                         // Create a button to start a new game.
-                        $('<button>Start Again</button>')
+                        $('<button>Hrať znova</button>')
                             .attr('id','btnPlayerRestart')
                             .addClass('btn')
                             .addClass('btnGameOver')
                     );
+                if(tie){
+                    $('#gameArea').append("<div class='gameResult'>Je to remíza!</div>");
+                } else {
+                    $('#gameArea').append("<div class='gameResult'>Výherca: "+winner +" so skóre: "+winscore+" </div>" );
+                }
+
             }
         },
 

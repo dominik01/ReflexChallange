@@ -72,9 +72,17 @@ function hostStartGame(gameId) {
  * @param data Sent from the client. Contains the current round and gameId (room)
  */
 function hostNextRound(data) {
-    if(data.round < wordPool.length ){
+    if(data.round < 15 ){
         // Send a new set of words back to the host and players.
         sendWord(data.round, data.gameId);
+        if(data.round>=5){
+            sendColor(data.round, data.gameId);
+        }
+        if(data.round>=10){
+            sendBackWord(data.round,data.gameId);
+        }
+
+
     } else {
         // If the current round exceeds the number of words, send the 'gameOver' event.
         io.sockets.in(data.gameId).emit('gameOver',data);
@@ -161,6 +169,52 @@ function sendWord(wordPoolIndex, gameId) {
     io.sockets.in(data.gameId).emit('newWordData', data);
 }
 
+function sendColor(wordPoolIndex, gameId) {
+    var data = getButtonData(wordPoolIndex);
+    io.sockets.in(data.gameId).emit('newWordData', data);
+}
+
+function sendBackWord(wordPoolIndex, gameId) {
+    var data = getBackWordData(wordPoolIndex);
+    console.log(data);
+    io.sockets.in(data.gameId).emit('newWordData', data);
+}
+
+function getBackWordData(i){
+    var pick = backWords[i-10].words;
+    var badWord = shuffle(backWords[i-10].decoys).slice(0,4);
+    badWord.splice(0,0,pick[1]);
+    badWord = shuffle(badWord);
+
+
+    var wordData = {
+        round: i,
+        word : pick[0],   // Displayed Word
+        answer : pick[1], // Correct Answer
+        list : badWord      // Word list for player (decoys and answer)
+    };
+
+    return wordData;
+
+}
+
+
+function getButtonData(i){
+    var colors = ["blue","red","green","yellow","orange","gray","purple","pink","white","brown"];
+    var pick = shuffle(colors);
+    badCol = pick.slice(0,6);
+    badCol = shuffle(badCol);
+    var wordData = {
+        round: i,
+        word : pick[0],   // Displayed Word
+        answer : pick[0], // Correct Answer
+        list : badCol      // Word list for player (decoys and answer)
+    };
+
+    return wordData;
+
+}
+
 /**
  * This function does all the work of getting a new words from the pile
  * and organizing the data to be sent back to the clients.
@@ -172,14 +226,25 @@ function getWordData(i){
     // Randomize the order of the available words.
     // The first element in the randomized array will be displayed on the host screen.
     // The second element will be hidden in a list of decoys as the correct answer
-    var words = wordPool[i].words;
+    //var words = wordPool[i].words;
+    var sign = '';
+    var sum = 0;
+    var rnd =  Math.floor(Math.random() * 3);
 
     var num1 =  Math.floor(Math.random() * 50);
     var num2 = Math.floor(Math.random() * 50);
-    var sum  = num1  + num2;
+    if (rnd==1){
+        sum  = num1  + num2;
+        sign = '+';
+    }
+    else{
+        sum = num1 - num2;
+        sign = '-';
+    }
+
 
     // Randomize the order of the decoy words and choose the first 5
-    var decoys = shuffle(wordPool[i].decoys).slice(0,5);
+    var decoys = shuffle(wordPool[0].decoys).slice(0,5);
 
     // Pick a random spot in the decoy list to put the correct answer
     var rnd = Math.floor(Math.random() * 5);
@@ -188,7 +253,7 @@ function getWordData(i){
     // Package the words into a single object.
     var wordData = {
         round: i,
-        word : num1+"+"+num2,   // Displayed Word
+        word : num1+sign+num2,   // Displayed Word
         answer : sum, // Correct Answer
         list : decoys      // Word list for player (decoys and answer)
     };
@@ -230,26 +295,33 @@ function shuffle(array) {
  *
  * @type {Array}
  */
+
+var backWords = [
+    {
+        "words" : ["forward","drawrof"],
+        "decoys" : ["drwarfor","dravrof","drawfor","dwarrof","drwarof","darwfor"]
+    },
+    {
+        "words" : ["perfect","tcefrep"],
+        "decoys" : ["tcefper","tecfrep","tcefpir","tcerfep","tcefrpe","cetfrep"]
+    },
+    {
+        "words" : ["house","esuoh"],
+        "decoys" : ["ehsue","eshue","esohue","eushoe","souhe","ehuose"]
+    },
+    {
+        "words" : ["fantasy","ysatnaf"],
+        "decoys" : ["yastnaf","ystanaf","ysatanf","ysantaf","ysatnef","ytasnaf"]
+    },
+    {
+        "words" : ["birthday","yadhtrib"],
+        "decoys" : ["ydahtrib","yahdtrib","yadthrib","yadhrtib","yadhtirb","yahdtrib"]
+    }
+]
 var wordPool = [
     {
         "words" : ["5*5","25"],
         "decoys" : ["30","20","15","24","18","35","5","10"]
-    },
-    {
-        "words" : ["45*7",45*7],
-        "decoys" : ["10","15","20","25","27","28","45","49"]
-    },
-    {
-        "words" : [Math.floor(Math.random() * 50)+"+"+Math.floor(Math.random() * 50),45*7],
-        "decoys" : ["10","15","20","25","27","28","45","49"]
-    },
-    {
-        "words" : ["45*7",45*7],
-        "decoys" : ["10","15","20","25","27","28","45","49"]
-    },
-    {
-        "words" : ["45*7",45*7],
-        "decoys" : ["10","15","20","25","27","28","45","49"]
     }
     /*{
         "words"  : [ "sale","seal","ales","leas" ],

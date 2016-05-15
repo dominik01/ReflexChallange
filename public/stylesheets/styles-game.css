@@ -33,7 +33,7 @@ html, body {
     font-size: 2em;
     line-height: 1.2;
     text-align: center;
-    background-color: #8AD453;
+    background-color: #35B7B7;
     white-space: nowrap;
     vertical-align: middle;
     cursor: pointer;
@@ -43,6 +43,37 @@ html, body {
     -ms-user-select: none;
     -o-user-select: none;
     user-select: none;
+}
+
+.pink{
+     background-color: pink;
+ }
+.blue{
+    background-color: blue;
+}
+.red{
+    background-color: red;
+}
+.green{
+    background-color: green;
+}
+.yellow{
+    background-color: yellow;
+}
+.orange{
+    background-color: orange;
+}
+.brown{
+    background-color: brown;
+}
+.gray{
+    background-color: gray;
+}
+.purple{
+    background-color: purple;
+}
+.beige{
+    background-color: beige;
 }
 
 .btn:focus {
@@ -154,6 +185,13 @@ html, body {
     width: 90%;
 }
 
+.info-new{
+    text-align: center;
+    font-size: 2em;
+    font-style: italic;
+    color: #b2182e;
+}
+
 
 /* ******************************
            JOIN SCREEN
@@ -219,6 +257,7 @@ html, body {
     border-bottom: 1px dotted white;
     font-weight: 400;
     font-size: 2em !important;
+    min-height: 1.5em;
     color: #140615;
 }
 
@@ -302,12 +341,12 @@ html, body {
 
 .playerScore .score {
     text-align: center;
-    background-color: #A8FF56;
+    background-color: #60ABE0;
 }
 
 .playerScore .playerName {
     width: 77%;
-    background-color: #ECFFE0;
+    background-color: #A3BFC5;
 }
 
 #player1Score {
@@ -333,7 +372,7 @@ html, body {
 }
 
 .btnGameOver {
-    width: 100%;
+    width: 92%;
     height: 10%;
     position: fixed;
     bottom: 0;
@@ -342,6 +381,13 @@ html, body {
 .useranameClass{
     float:right;
     clear: both;
+}
+
+.gameResult{
+    text-align: center;
+    padding-top: 5%;
+    font-size: 4em;
+    color:firebrick;
 }
 
 
